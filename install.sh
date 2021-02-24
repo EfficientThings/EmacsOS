@@ -179,3 +179,4 @@ else
         --with-gnutls \
         --with-rsvg
 fi
+printf_good "Done!"
