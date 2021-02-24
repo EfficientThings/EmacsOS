@@ -64,9 +64,10 @@ git checkout features/native-comp &> /dev/null
 cd ..
 printf "\u001b[32mDone checking out native-comp!\u001b[0m\n"
 
+printf "Determining OS... "
 if [ $(uname -s) == "Darwin" ]; then
     OS="Darwin"
-
+    printf "Darwin.\n"
     printf "Checking for brew... "
     if ! which brew &> /dev/null; then
         printf "\u001b[31mnot installed.\u001b[0m\n"
@@ -101,7 +102,7 @@ if [ $(uname -s) == "Darwin" ]; then
     export LIBRARY_PATH="/usr/local/Cellar/gcc/10.2.0_4/lib/gcc/10:${LIBRARY_PATH:-}"
 else
     OS="Linux"
-
+    printf "Linux (assumed to be Arch).\n"
     pacman_ensure gcc
     printf "Checking gcc version... "
     if [ $(gcc --version | grep ^gcc | sed 's/^.* //g') == "10.2.0" ]; then
@@ -179,4 +180,4 @@ else
         --with-gnutls \
         --with-rsvg
 fi
-printf_good "Done!"
+printf_good "Done!\n"
