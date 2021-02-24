@@ -1,0 +1,5 @@
+* EmacsOS
+
+An attempt to create a sort of Emacs OS via a minimal Gentoo install with Emacs and EXWM. Also designed to support systems with low specs. 
+
+Very work in progress.
