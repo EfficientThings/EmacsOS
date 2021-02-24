@@ -55,12 +55,12 @@ function pacman_ensure()
 }
 
 echo "Cloning into emacs source..."
-#git submodule add https://github.com/emacs-mirror/emacs.git
+git submodule add https://github.com/emacs-mirror/emacs.git
 printf "\u001b[32mDone cloning emacs!\u001b[0m\n"
 
 echo "Checking out native-comp branch..."
 cd emacs
-# git checkout features/native-comp &> /dev/null
+git checkout features/native-comp &> /dev/null
 cd ..
 printf "\u001b[32mDone checking out native-comp!\u001b[0m\n"
 
@@ -75,8 +75,9 @@ if [ $(uname -s) == "Darwin" ]; then
         printf_good "installed.\n"
     fi
 
-    brew_ensure gcc-10
+    brew_ensure gcc@10
     brew_ensure libgccjit
+    brew_ensure llvm
     brew_ensure jpeg
     brew_ensure libtiff
     brew_ensure gnutls
@@ -117,6 +118,7 @@ else
         printf_bad "nope!\n"
         exit 1
     fi
+    pacman_ensure clang
     pacman_ensure libtiff
     pacman_ensure gnutls
     pacman_ensure nettle
@@ -140,6 +142,7 @@ export CPPFLAGS="${CFLAGS}"
 export CFLAGS
 export LDFLAGS
 export PKG_CONFIG_PATH
+
 
 ./autogen.sh
 
