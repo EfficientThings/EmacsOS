@@ -1,41 +1,44 @@
 function brew_ensure()
 {
-    echo -n "Checking for $1 dependency... "
-    if [brew list $1]; then
-        echo "found."
+    printf "Checking for $1 dependency... "
+    if brew list $1 &> /dev/null; then
+        printf "found.\n"
         exit 0
     else
-        echo "not found."
+        printf "not found.\n"
         exit 1
     fi
 }
 
 function pacman_ensure()
 {
-    echo -n "Checking for $1 dependency... "
-    if [pacman -Q $1]; then
-        echo "found."
+    printf -n "Checking for $1 dependency... "
+    if pacman -Q $1 &> /dev/null; then
+        printf "found.\n"
         exit 0
     else
-        echo "not found."
+        printf "not found.\n"
         exit 1
     fi
 }
 
 echo "Cloning into emacs source..."
-git submodule add https://github.com/emacs-mirror/emacs.git
+#git submodule add https://github.com/emacs-mirror/emacs.git
 
 echo "Checking out native-comp branch..."
-cd emacs
-git checkout features/native-comp
-cd ..
+#cd emacs
+#git checkout features/native-comp
+#cd ..
 
 if [ $(uname -s) == "Darwin" ]; then
     OS="Darwin"
 
-    if ! which brew ; then
-        echo "Error! brew is a dependency for MacOS install."
+    printf "Checking for brew... "
+    if ! which brew &> /dev/null; then
+        printf "not installed.\n"
         exit 1
+    else
+        printf "installed.\n"
     fi
 
     brew_ensure gcc-10
@@ -65,19 +68,19 @@ else
     OS="Linux"
 
     pacman_ensure gcc
-    echo "Checking gcc version... "
+    printf "Checking gcc version... "
     if [ $(gcc --version | grep ^gcc | sed 's/^.* //g') == "10.2.0" ]; then
-        echo "good."
+        printf "good.\n"
     else
-        echo "bad!"
+        printf "bad!\n"
         exit 1
     fi
     pacman_ensure libgccjit
-    echo "Checking that /usr/lib/libjpeg.so exists..."
+    printf "Checking that /usr/lib/libjpeg.so exists..."
     if [ -f "/usr/lib/libjpeg.so" ]; then
-        echo "it does."
+        printf "it does.\n"
     else
-        echo "it doesn't!"
+        printf "it doesn't!\n"
         exit 1
     fi
     pacman_ensure libtiff
