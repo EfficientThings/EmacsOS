@@ -1,44 +1,75 @@
+function printf_good()
+{
+    printf "\u001b[32m"$1"\u001b[0m"
+}
+
+function printf_bad()
+{
+    printf "\u001b[31m"$1"\u001b[0m"
+}
+
+
 function brew_ensure()
 {
     printf "Checking for $1 dependency... "
     if brew list $1 &> /dev/null; then
-        printf "found.\n"
-        exit 0
+        printf_good "found.\n"
+        return 0
     else
-        printf "not found.\n"
-        exit 1
+        printf_bad "not found.\n"
+        printf "Installing $1... "
+        if brew install $1 &> /dev/null; then
+            printf_good "installed.\n"
+        else
+            printf_bad "failed.\n"
+            return 1
+        fi
     fi
 }
 
 function pacman_ensure()
 {
-    printf -n "Checking for $1 dependency... "
+    printf "Checking for $1 dependency... "
     if pacman -Q $1 &> /dev/null; then
-        printf "found.\n"
-        exit 0
+        printf_good "found.\n"
+        return 0
     else
-        printf "not found.\n"
-        exit 1
+        printf_bad "not found.\n"
+        printf "Installing $1... "
+        if ! which yay &> /dev/null; then
+            printf_bad " error - yay is required for auto-install.\n"
+            return 1
+        else
+            if yay -S $1 &> /dev/null; then
+                printf_good "installed.\n"
+                return 0
+            else
+                printf_bad "failed.\n"
+                return 1
+            fi
+        fi
     fi
 }
 
 echo "Cloning into emacs source..."
-#git submodule add https://github.com/emacs-mirror/emacs.git
+#git submodule add https://github.com/emacs-mirror/emacs.git 
+printf_good "Done cloning emacs!\n"
 
 echo "Checking out native-comp branch..."
-#cd emacs
-#git checkout features/native-comp
-#cd ..
+cd emacs
+# git checkout features/native-comp &> /dev/null
+cd ..
+printf_good "Done checking out native-comp!\n"
 
 if [ $(uname -s) == "Darwin" ]; then
     OS="Darwin"
 
     printf "Checking for brew... "
     if ! which brew &> /dev/null; then
-        printf "not installed.\n"
+        printf_bad "not installed.\n"
         exit 1
     else
-        printf "installed.\n"
+        printf_good "installed.\n"
     fi
 
     brew_ensure gcc-10
@@ -70,17 +101,17 @@ else
     pacman_ensure gcc
     printf "Checking gcc version... "
     if [ $(gcc --version | grep ^gcc | sed 's/^.* //g') == "10.2.0" ]; then
-        printf "good.\n"
+        printf_good "good.\n"
     else
-        printf "bad!\n"
+        printf_bad "bad!\n"
         exit 1
     fi
     pacman_ensure libgccjit
-    printf "Checking that /usr/lib/libjpeg.so exists..."
+    printf "Checking that /usr/lib/libjpeg.so exists... "
     if [ -f "/usr/lib/libjpeg.so" ]; then
-        printf "it does.\n"
+        printf_good "yup.\n"
     else
-        printf "it doesn't!\n"
+        printf_bad "nope!\n"
         exit 1
     fi
     pacman_ensure libtiff
