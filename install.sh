@@ -1,8 +1,10 @@
+# only works on a single words since bash seems to split up strings into args :/
 function printf_good()
 {
     printf "\u001b[32m"$1"\u001b[0m"
 }
 
+# only works on a single words since bash seems to split up strings into args :/
 function printf_bad()
 {
     printf "\u001b[31m"$1"\u001b[0m"
@@ -16,13 +18,14 @@ function brew_ensure()
         printf_good "found.\n"
         return 0
     else
-        printf_bad "not found.\n"
+        printf "\u001b[31mnot found.\u001b[0m\n"
+        sleep 0.1
         printf "Installing $1... "
         if brew install $1 &> /dev/null; then
             printf_good "installed.\n"
         else
             printf_bad "failed.\n"
-            return 1
+            exit 1
         fi
     fi
 }
@@ -34,7 +37,7 @@ function pacman_ensure()
         printf_good "found.\n"
         return 0
     else
-        printf_bad "not found.\n"
+        printf "\u001b[31mnot found.\u001b[0m\n"
         printf "Installing $1... "
         if ! which yay &> /dev/null; then
             printf_bad " error - yay is required for auto-install.\n"
@@ -45,28 +48,28 @@ function pacman_ensure()
                 return 0
             else
                 printf_bad "failed.\n"
-                return 1
+                exit 1
             fi
         fi
     fi
 }
 
 echo "Cloning into emacs source..."
-#git submodule add https://github.com/emacs-mirror/emacs.git 
-printf_good "Done cloning emacs!\n"
+#git submodule add https://github.com/emacs-mirror/emacs.git
+printf "\u001b[32mDone cloning emacs!\u001b[0m\n"
 
 echo "Checking out native-comp branch..."
 cd emacs
 # git checkout features/native-comp &> /dev/null
 cd ..
-printf_good "Done checking out native-comp!\n"
+printf "\u001b[32mDone checking out native-comp!\u001b[0m\n"
 
 if [ $(uname -s) == "Darwin" ]; then
     OS="Darwin"
 
     printf "Checking for brew... "
     if ! which brew &> /dev/null; then
-        printf_bad "not installed.\n"
+        printf "\u001b[31mnot installed.\u001b[0m\n"
         exit 1
     else
         printf_good "installed.\n"
