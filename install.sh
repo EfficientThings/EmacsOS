@@ -1,3 +1,27 @@
+function brew_ensure()
+{
+    echo -n "Checking for $1 dependency... "
+    if [brew list $1]; then
+        echo "found."
+        exit 0
+    else
+        echo "not found."
+        exit 1
+    fi
+}
+
+function pacman_ensure()
+{
+    echo -n "Checking for $1 dependency... "
+    if [pacman -Q $1]; then
+        echo "found."
+        exit 0
+    else
+        echo "not found."
+        exit 1
+    fi
+}
+
 echo "Cloning into emacs source..."
 git submodule add https://github.com/emacs-mirror/emacs.git
 
@@ -8,12 +32,27 @@ cd ..
 
 if [ $(uname -s) == "Darwin" ]; then
     OS="Darwin"
+
+    if ! which brew ; then
+        echo "Error! brew is a dependency for MacOS install."
+        exit 1
+    fi
+
+    brew_ensure gcc-10
+    brew_ensure libgccjit
+    brew_ensure jpeg
+    brew_ensure libtiff
+    brew_ensure gnutls
+    brew_ensure nettle
+    brew_ensure libtasn1
+    brew_ensure p11-kit
+
     libs=(
         /usr/local/Cellar/gcc/10.2.0_4
         /usr/local/Cellar/giflib/5.2.1
         /usr/local/Cellar/jpeg/9d
         /usr/local/Cellar/libtiff/4.2.0
-        /usr/local/Cellar/gnutls/3.6.15        
+        /usr/local/Cellar/gnutls/3.6.15
         /usr/local/Cellar/nettle/3.7
         /usr/local/Cellar/libtasn1/4.16.0
         /usr/local/Cellar/p11-kit/0.23.22
@@ -24,6 +63,29 @@ if [ $(uname -s) == "Darwin" ]; then
     export LIBRARY_PATH="/usr/local/Cellar/gcc/10.2.0_4/lib/gcc/10:${LIBRARY_PATH:-}"
 else
     OS="Linux"
+
+    pacman_ensure gcc
+    echo "Checking gcc version... "
+    if [ $(gcc --version | grep ^gcc | sed 's/^.* //g') == "10.2.0" ]; then
+        echo "good."
+    else
+        echo "bad!"
+        exit 1
+    fi
+    pacman_ensure libgccjit
+    echo "Checking that /usr/lib/libjpeg.so exists..."
+    if [ -f "/usr/lib/libjpeg.so" ]; then
+        echo "it does."
+    else
+        echo "it doesn't!"
+        exit 1
+    fi
+    pacman_ensure libtiff
+    pacman_ensure gnutls
+    pacman_ensure nettle
+    pacman_ensure libtasn1
+    pacman_ensure p11-kit
+
     libs=(
         /usr/lib/gcc/x86_64-pc-linux-gnu/10.2.0_4
         /usr/lib/
@@ -61,8 +123,8 @@ if [ $OS == "Darwin" ]; then
         --with-modules \
         --with-xml2 \
         --with-gnutls \
-        --with-rsvg 
-else    
+        --with-rsvg
+else
     ./configure \
         --disable-silent-rules \
         --with-nativecomp \
@@ -75,5 +137,5 @@ else
         --with-modules \
         --with-xml2 \
         --with-gnutls \
-        --with-rsvg 
+        --with-rsvg
 fi
