@@ -55,13 +55,12 @@ function pacman_ensure()
 }
 
 echo "Cloning into emacs source..."
-git submodule add https://github.com/emacs-mirror/emacs.git
+#git submodule add https://github.com/emacs-mirror/emacs.git
 printf "\u001b[32mDone cloning emacs!\u001b[0m\n"
 
 echo "Checking out native-comp branch..."
-cd emacs
-git checkout features/native-comp &> /dev/null
-cd ..
+#cd emacs
+#git checkout features/native-comp &> /dev/null
 printf "\u001b[32mDone checking out native-comp!\u001b[0m\n"
 
 printf "Determining OS... "
@@ -147,37 +146,62 @@ export PKG_CONFIG_PATH
 
 ./autogen.sh
 
-export CC="clang"
+read -p "Which compiler do you want to use? (clang/gcc) " SEL_CC
 
-if [ $OS == "Darwin" ]; then
-    ./configure \
-        --disable-silent-rules \
-        --with-cocoa \
-        --with-nativecomp \
-        --with-json \
-        --without-dbus \
-        --without-imagemagick \
-        --with-mailutils \
-        --with-ns \
-        --with-json \
-        --with-cairo \
-        --with-modules \
-        --with-xml2 \
-        --with-gnutls \
-        --with-rsvg
-else
-    ./configure \
-        --disable-silent-rules \
-        --with-nativecomp \
-        --with-json \
-        --without-dbus \
-        --without-imagemagick \
-        --with-mailutils \
-        --with-json \
-        --with-cairo \
-        --with-modules \
-        --with-xml2 \
-        --with-gnutls \
-        --with-rsvg
+if [[ $SEL_CC == "clang" ]]; then
+    export CC="clang"
+elif [[ $SEL_CC == "gcc" ]]; then
+    export CC="gcc"
 fi
+
+CONFIGURE_COMMAND="./configure"
+read -p "Disable silent rules? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "Y" ]]; then
+    CONFIGURE_COMMAND+=" --disable-silent-rules"
+fi
+read -p "Enable native compilation? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "Y" ]]; then
+    CONFIGURE_COMMAND+=" --with-nativecomp"
+fi
+read -p "Enable dbus support? (y/n) " ANS 
+if [[ $ANS == "n" || $ANS == "N" ]]; then
+    CONFIGURE_COMMAND+=" --without-dbus"
+fi
+read -p "Enable json support? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --with-json"
+fi
+read -p "Use Cairo instead of ImageMagick? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --without-imagemagick --with-cairo"
+fi
+read -p "Enable mail utilities? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --with-mailutils"
+fi
+read -p "Enable xml2? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --with-xml2"
+fi
+read -p "Enable gnutls? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --with-gnutls"
+fi
+read -p "Enable modules? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --with-modules"
+fi
+read -p "Enable rsvg? (y/n) " ANS 
+if [[ $ANS == "y" || $ANS == "y" ]]; then
+    CONFIGURE_COMMAND+=" --with-modules"
+fi
+if [ $OS == "Darwin" ]; then
+    CONFIGURE_COMMAND+=" --with-ns --with-cocoa"
+fi
+
+$CONFIGURE_COMMAND
+    
+make
+# cd ..
+
 printf_good "Done!\n"
