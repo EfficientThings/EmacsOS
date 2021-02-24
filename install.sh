@@ -1,3 +1,5 @@
+EMACSOS_DIR=$(pwd)
+
 # only works on a single words since bash seems to split up strings into args :/
 function printf_good()
 {
@@ -50,6 +52,16 @@ function pacman_ensure()
                 exit 1
             fi
         fi
+    fi
+}
+
+function melpa_ensure()
+{
+    printf "Installing package $1... "
+    if emacs -q -l "$EMACSOS_DIR/melpa.el" -batch -eval "(package-install '$1)"; then
+        printf_good "done.\n"
+    else
+        printf_bad "failed.\n"
     fi
 }
 
@@ -143,7 +155,7 @@ printf "\u001b[32mDone checking out native-comp!\u001b[0m\n"
 # export PKG_CONFIG_PATH
 
 
-./autogen.sh
+./autogen.sh > ./autogen.log
 
 read -p "Which compiler do you want to use? (clang/gcc) " SEL_CC
 
@@ -153,12 +165,9 @@ elif [[ $SEL_CC == "gcc" ]]; then
     export CC="gcc"
 fi
 
-QUESTIONS=("Disable silent rules? (y/n/?)" "Enable native compilation? (y/n/?)" "Enable dbus support? (y/n/?)" "Enable json support? (y/n/?)" "Use Cairo instead of ImageMagick? (y/n/?)")
-EXPECTED_ANSWERS=("y" "y" "n" "y" "y")
+QUESTIONS=("Enable native compilation? (y/n/?)" "Enable dbus support? (y/n/?)" "Enable json support? (y/n/?)" "Use Cairo instead of ImageMagick? (y/n/?)")
+EXPECTED_ANSWERS=("y" "y" "y" "n" "y" "y")
 DOCUMENTATION=(
-"Use --disable-silent-rules to cause 'make' to give more details about the commands it executes.
-This can be helpful when debugging a build that goes awry. 'make V=1' also enables the extra chatter."
-
 "gccemacs (or native-comp) is a modified Emacs capable of compiling and running Emacs Lisp as native
 code in form of re-loadable elf files. As the name suggests this is achieved by blending together Emacs
 and the gcc infrastructure."
@@ -167,34 +176,53 @@ and the gcc infrastructure."
 session bus is running. This might be inconvenient for Emacs when running as daemon or running via a
 remote ssh connection."
 
-"Emacs 27 brought JSON support."
+"Compile with native JSON support."
 
 "Cairo is a 2D graphics library with support for multiple output devices. Cairo is designed to produce
 consistent output on all output media while taking advantage of display hardware acceleration when
 available (eg. through the X Render Extension)."
 )
-FLAGS=("--disable-silent-rules" "--with-nativecomp" "--without-dbus --without-gconf --without-gsettings" "--with-json" "--with-cairo --without-imagemagick")
+FLAGS=("--with-nativecomp" "--without-dbus --without-gconf --without-gsettings" "--with-json" "--with-cairo --without-imagemagick")
 
 CONFIGURE_COMMAND="./configure"
 
-for (( i=0; i<${#QUESTIONS[@]}; i++ )); do
-    read -p "${QUESTIONS[$i]} " ANS
-    if [[ $ANS == $EXPECTED_ANSWERS[$i] ]]; then
-        CONFIGURE_COMMAND+=" ${FLAGS[$i]}"
-    elif [[ $ANS == "?" ]]; then
-        echo "${DOCUMENTATION[$i]} "
-        i=$i-1
-    fi
-done
-
+read -p "Use default build options? (y/n) " ANS
+if [ $ANS == "y" ]; then
+    CONFIGURE_COMMAND+="--disable-silent-rules --with-nativecomp --with-json --without-dbus --without-imagemagick"
+    CONFIGURE_COMMAND+="--with-mailutils --with-cairo --with-modules --with-xml2 --with-gnutls --with-rsvg"
+elif [ $ANS == "n" ]; then
+    for (( i=0; i<${#QUESTIONS[@]}; i++ )); do
+        read -p "${QUESTIONS[$i]} " ANS
+        if [[ $ANS == $EXPECTED_ANSWERS[$i] ]]; then
+            CONFIGURE_COMMAND+=" ${FLAGS[$i]}"
+        elif [[ $ANS == "?" ]]; then
+            echo "${DOCUMENTATION[$i]} "
+            i=$i-1
+        fi
+    done
+fi
 
 if [ $OS == "Darwin" ]; then
     CONFIGURE_COMMAND+=" --with-ns --with-cocoa"
 fi
 
-$CONFIGURE_COMMAND
+$CONFIGURE_COMMAND > ./configure.log
 
-make
+make > ./compile.log
 # cd ..
+
+printf_good "Installed!\n"
+
+read -p "Install some basics for Emacs? (y/n) " ANS
+if [ $ANS == "y" ]; then
+    if [ -f .emacs.d ]; then
+        echo "Detected existing Emacs configuration directory! Moving it to ~/.emacs.d.bak"
+        mv ~/.emacs.d ~/.emacs.d.bak
+    fi
+    melpa_ensure doom-themes
+    melpa_ensure doom-modeline
+    melpa_ensure yasnippet
+fi
+
 
 printf_good "Done!\n"
