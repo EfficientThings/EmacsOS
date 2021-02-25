@@ -304,8 +304,7 @@ if [ $ANS == "y" ]; then
     melpa_ensure company
     melpa_ensure yasnippet
     printf "Applying relevant default configurations...\n"
-    curl_ensure
-    https://raw.githubusercontent.com/EfficientThings/emacsOS-config/master/code-utils-config.el ~/.emacs.d/lisp/code-utils-config.el
+    curl_ensure https://raw.githubusercontent.com/EfficientThings/emacsOS-config/master/code-utils-config.el ~/.emacs.d/lisp/code-utils-config.el
     echo "(load 'code-utils-config)" >> ~/.emacs.d/init.el
     printf_good "Done!\n"
 fi
