@@ -2,7 +2,7 @@
 
 An attempt to create a sort of "Emacs OS" via a minimal Gentoo install with Emacs and EXWM. Installed via a straightforward yet customizable bash script that allows for a variety of usecases.
 
-Demo of Emacs setup script:
+Demo of Emacs setup script (note that the actual compilation process is ommitted since it's time-consuming, and as a result =./autogen.sh=, =make=, and =./configure= fail in the demo here but not in reality):
 [[archinstall2.gif]]
 
 Gentoo install script is very work in progress.
