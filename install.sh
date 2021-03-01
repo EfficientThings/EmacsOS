@@ -76,12 +76,12 @@ function curl_ensure()
 }
 
 echo "Cloning into emacs source..."
-#git submodule add https://github.com/emacs-mirror/emacs.git
+git submodule add https://github.com/emacs-mirror/emacs.git
 printf "\u001b[32mDone cloning emacs!\u001b[0m\n"
 
 echo "Checking out native-comp branch..."
-#cd emacs
-#git checkout features/native-comp &> /dev/null
+cd emacs
+git checkout feature/native-comp
 printf "\u001b[32mDone checking out native-comp!\u001b[0m\n"
 
 printf "Determining OS... "
@@ -263,11 +263,10 @@ else
     printf_good "done.\n"
 fi
 printf "Writing to xinitrc... "
-echo "#xhost +SI:localuser:$USER
-#export _JAVA_AWT_WM_NONREPARENTING=1
-#xsetroot -cursor_name left_ptr
-#xset r rate 200 60
-#exec emacs" > ~/.xinitrc
+echo "xhost +SI:localuser:$USER
+export _JAVA_AWT_WM_NONREPARENTING=1
+xsetroot -cursor_name left_ptr
+exec emacs" > ~/.xinitrc
 printf_good "done.\n"
 
 melpa_ensure use-package
@@ -280,7 +279,7 @@ if [ $ANS == "y" ]; then
     melpa_ensure centaur-tabs
     printf "Applying relevant default configurations...\n"
     curl_ensure https://raw.githubusercontent.com/EfficientThings/emacsOS-config/master/doom-themeage.el ~/.emacs.d/lisp/doom-themeage.el
-    echo "(load 'doom-themeage)" >> ~/.emacs.d/init.el
+    echo '(load "doom-themeage")' >> ~/.emacs.d/init.el
     printf_good "Done!\n"
 fi
 read -p "Install Ivy and associated packages? (y/n) " ANS
@@ -291,7 +290,7 @@ if [ $ANS == "y" ]; then
     melpa_ensure swiper
     printf "Applying relevant default configurations...\n"
     curl_ensure https://raw.githubusercontent.com/EfficientThings/emacsOS-config/master/ivy-config.el ~/.emacs.d/lisp/ivy-config.el
-    echo "(load 'ivy-config)" >> ~/.emacs.d/init.el
+    echo '(load "ivy-config")' >> ~/.emacs.d/init.el
     printf_good "Done!\n"
 fi
 read -p "Install code utility packages like lsp, company, yasnippet? (y/n) " ANS
