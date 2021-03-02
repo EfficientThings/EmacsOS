@@ -183,13 +183,13 @@ DOCUMENTATION=(
 
 "Cairo is a 2D graphics library with support for multiple output devices. Cairo is designed to produce consistent output on all output media while taking advantage of display hardware acceleration when available (eg. through the X Render Extension)."
 )
-FLAGS=("--with-nativecomp" "--without-dbus --without-gconf --without-gsettings" "--with-json" "--with-cairo --without-imagemagick")
+FLAGS=("--with-native-compilation" "--without-dbus --without-gconf --without-gsettings" "--with-json" "--with-cairo --without-imagemagick")
 
 CONFIGURE_COMMAND="./configure"
 
 read -p "Use default build options? (y/n) " ANS
 if [ $ANS == "y" ]; then
-    CONFIGURE_COMMAND+=" --disable-silent-rules --with-nativecomp --with-json --without-dbus --without-imagemagick"
+    CONFIGURE_COMMAND+=" --disable-silent-rules --with-native-compilation --with-json --without-dbus --without-imagemagick"
     CONFIGURE_COMMAND+="--with-mailutils --with-cairo --with-modules --with-xml2 --with-gnutls --with-rsvg"
 elif [ $ANS == "n" ]; then
     for (( i=0; i<${#QUESTIONS[@]}; i++ )); do
@@ -215,7 +215,8 @@ else
 fi
 
 printf "Compiling (progress visible in ./configure.log, will take a WHILE)... "
-if make > ./compile.log; then
+ncore=$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu)
+if "$(make -j$ncore)"  > ./compile.log; then
     printf_good "finished.\n"
 else
     printf_bad "failed.\n"
@@ -236,6 +237,7 @@ if [ $ANS == "y" ]; then
         mkdir ~/.emacs.d
         touch ~/.emacs.d/init.el
         mkdir ~/.emacs.d/lisp
+	mkdir ~/.emacs.d/lisp/external
     fi
 else
     echo "Fine, but you may run into unexpected behavior!"
@@ -271,6 +273,12 @@ printf_good "done.\n"
 
 melpa_ensure use-package
 
+read -p "Include vanity gaps for EXWM? (y/n) " ANS
+if [ $ANS == "y" ]; then
+    curl_ensure https://raw.githubusercontent.com/lucasgruss/exwm-outer-gaps/main/exwm-outer-gaps.el ~/.emacs.d/lisp/external/exwm-outer-gaps.el
+    echo "(exwm-outer-gaps-mode)" >> ~/.emacs.d/init.el    
+fi
+    
 read -p "Install Doom Emacs theme packages? (y/n) " ANS
 if [ $ANS == "y" ]; then
     melpa_ensure doom-themes
@@ -286,25 +294,14 @@ read -p "Install Ivy and associated packages? (y/n) " ANS
 if [ $ANS == "y" ]; then
     melpa_ensure ivy
     melpa_ensure ivy-prescient
+    melpa_ensure ivy-rich
+    melpa_ensure all-the-icons-ivy-rich
+    melpa_ensure helpful
     melpa_ensure counsel
     melpa_ensure swiper
     printf "Applying relevant default configurations...\n"
     curl_ensure https://raw.githubusercontent.com/EfficientThings/emacsOS-config/master/ivy-config.el ~/.emacs.d/lisp/ivy-config.el
     echo '(load "ivy-config")' >> ~/.emacs.d/init.el
-    printf_good "Done!\n"
-fi
-read -p "Install code utility packages like lsp, company, yasnippet? (y/n) " ANS
-if [ $ANS == "y" ]; then
-    melpa_ensure lsp
-    melpa_ensure lsp-ui
-    melpa_ensure treemacs
-    melpa_ensure lsp-treemacs
-    melpa_ensure flycheck
-    melpa_ensure company
-    melpa_ensure yasnippet
-    printf "Applying relevant default configurations...\n"
-    curl_ensure https://raw.githubusercontent.com/EfficientThings/emacsOS-config/master/code-utils-config.el ~/.emacs.d/lisp/code-utils-config.el
-    echo "(load 'code-utils-config)" >> ~/.emacs.d/init.el
     printf_good "Done!\n"
 fi
 
